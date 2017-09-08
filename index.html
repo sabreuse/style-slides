@@ -1,0 +1,469 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <title>Beyond Basic CSS</title>
+    <meta charset="utf-8">
+    <style>
+      @import url(https://fonts.googleapis.com/css?family=Yanone+Kaffeesatz);
+      @import url(https://fonts.googleapis.com/css?family=Merriweather:400,700,400italic);
+      @import url(https://fonts.googleapis.com/css?family=Ubuntu+Mono:400,700,400italic);
+
+      body { font-family: 'Merriweather'; }
+      h1, h2, h3 {
+        font-family: 'Yanone Kaffeesatz';
+        font-weight: normal;
+      }
+      .remark-code, .remark-inline-code { font-family: 'Ubuntu Mono'; }
+      .remark-slide-content {
+        line-height: 1.4
+      }
+      .remark-slide-scaler {
+        box-shadow: 0 0 20px #666;
+      }
+      .remark-slide img {
+        max-width: 100%
+      }
+    </style>
+  </head>
+  <body>
+    <textarea id="source">
+
+class: center, middle
+
+# Beyond Basic CSS: Modern Style
+
+Amy Hendrix  
+Front-End Developer, Finished Goods  
+Spoonflower.com
+---
+class: center, middle
+
+# In the beginning, there was HTML
+
+![unstyled](http://www.griffithswebdesign.com/images/postAssets/unstyled.jpg)
+---
+
+# CSS
+
+It makes things pretty!
+![styled](https://phpocean.com/assets/images/source-images/pics-news/too-many-ways-to-build-a-website-nowadays.png)
+---
+
+# ... and people love to hate it
+
+![CSS OH NO](http://a.memegen.com/JzOjFs.gif)
+
+--
+
+Global scope  
+--
+
+Specificity Wars  
+--
+
+The Box Model  
+--
+
+ The Cascade   
+ 
+--
+
+... I could go on
+---
+class: middle, center
+
+# So How Can We Fix It?
+
+--
+## Better CSS Tools
+.left[
+1. Preprocessors
+2. PostCSS
+3. CSS Modules]
+
+---
+class: center, middle
+
+# CSS Preprocessors
+
+## Sass (and Less and Stylus too)
+
+---
+class: middle
+## Preprocessors: What do they do
+
+Looks kinda-mostly like CSS, compiles to pure CSS
+
+DRY up code by allowing you to use programming features like variables, loops, functions
+
+Better writing efficiency, easier to scope and keep track, because nesting
+
+Used as part of a build process (but more on that later)
+
+---
+
+# Variables
+
+Write once, reuse anywhere, to keep values consistent
+
+```css
+$font-stack:    Helvetica, sans-serif;
+$primary-color: #333;
+
+body {
+  font: 100% $font-stack;
+  color: $primary-color;
+}
+```
+
+--
+
+```css
+body {
+  font: 100% Helvetica, sans-serif;
+  color: #333;
+}
+```
+
+---
+
+# Nesting
+
+Control scope problems by limiting styles to a specific element
+
+```css
+nav {
+  ul {
+    margin: 0;
+    padding: 0;
+    list-style: none;
+  }
+
+  li { display: inline-block;
+    a {
+      display: block;
+      padding: 6px 12px;
+      text-decoration: none;
+      &:hover {
+        color: green;
+      }
+    }
+  }  
+}
+```
+
+---
+# Nesting
+
+```css
+nav ul {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+nav li {
+  display: inline-block;
+}
+
+nav li a {
+  display: block;
+  padding: 6px 12px;
+  text-decoration: none;
+}
+
+nav li a:hover {
+  color: green
+}
+```
+
+---
+
+## Nesting (a warning)
+
+Never nest more than three layers deep!
+
+--
+
+```css
+body
+  .wrapper {
+    footer {
+      .footer-wrapper {
+        form#search {
+          fieldset {
+            input {
+...
+```
+
+--
+
+```css
+
+body .wrapper footer .footer-wrapper form#search fieldset input { 
+  ...
+}
+
+```
+---
+# Mixins
+
+Reusable code blocks with parameters
+
+```css
+
+@mixin fancy-fonts ($color, $size) {
+  color: $color;
+  font-size: $size;
+}
+
+h1 {
+  @include fancy-fonts(purple, 16px);
+}
+
+```
+
+-- 
+
+```css
+
+h1 {
+  color: purple;   
+  font-size: 16px;
+}
+```
+---
+
+# Complex Mixins
+```css
+
+@mixin _fg($colList, $gutter: $_fg_gutter, $padding: $_fg_padding) {
+  @if type-of($colList) == number { // call _fg_grid() directly
+    @include _fg_grid($colList, $gutter, $padding);
+  } @else if type-of($colList) == list and length($colList) > 1 {
+    $columnCount: 0;
+    @each $i in $colList {
+      $columnCount: $columnCount + $i;
+    }
+
+    @include _fg_grid($columnCount, $gutter, $padding);
+
+    @for $i from 1 through length($colList) { // set child items widths using nth:child()
+      $c: nth($colList, $i);
+      & > :nth-child(#{length($colList)}n+#{$i}) {
+        @include _fg_width($c/$columnCount, $gutter);
+      }
+    }
+  }
+}
+
+```
+Excerpt from source: https://codepen.io/aaronjamesyoung/pen/yezKpj
+---
+
+## Math
+
+In modern browsers, CSS has `calc`
+
+```css
+.column {
+  width: calc(100% - 80px);
+}
+```
+
+--
+In Sass: use variables and mixins in your calculations
+```css
+$gutter-width: 1em;
+
+@mixin cols(number) {
+  width: (100% / number) - $gutter-width
+}
+
+.column {
+  @include cols(4)
+}
+```
+---
+
+## Built-in Functions: Color manipulation
+
+`lighten($color, $amount)` : Makes a color lighter.
+
+`darken($color, $amount)` : Makes a color darker.
+
+`saturate($color, $amount)` : Makes a color more saturated.
+
+`desaturate($color, $amount` : Makes a color less saturated.
+
+`rgba($color, $alpha)` : Changes the alpha component for a color.
+
+---
+
+## Built-in Functions: Number functions
+
+`round($number)` : Rounds a number to the nearest whole number.
+
+`ceil($number)` : Rounds a number up to the next whole number.
+
+`floor($number)` : Rounds a number down to the previous whole number.
+
+`min($numbers...)` : Finds the minimum of several numbers.
+
+`max($numbers...)` : Finds the maximum of several numbers.
+---
+
+class: center, middle
+
+## Preprocessors: the dev ecosystem
+
+.left[
+* syntax highlighting & snippets for your editor
+* built in to rails asset pipeline and other full stack frameworks
+* compile with build scripts 
+* freestanding watch/compile app (e.g. koala)]
+---
+
+class: center, middle
+
+# PostCSS
+
+Plugins that transform CSS code
+
+Examples: linting, browser compatibility, code style
+
+Used with Build scripts (gulp, webpack, etc)
+---
+class: middle
+
+# PostCSS Examples
+
+Autoprefixer: Apply browser prefixes only as needed
+--
+* no need to include prefixes in your code
+* recompiles with each new build
+* use generic settings (2 versions back) or plug in your own site's Analytics data 
+
+---
+class: middle
+
+# PostCSS Examples
+
+AutoReset: Automatically include style reset rules (think normalize!)
+
+--
+* no need to maintain it as a dependency or load it as a second HTTP request
+* keep your reset up to date
+* customize which rules you reset
+
+---
+
+class: middle
+
+# PostCSS Examples
+
+StyleLint: avoid errors and enforce consistent style rules
+
+Things like: 
+* invalid values or units
+* too much specificity
+* automatically fix errors (if you want)
+
+---
+class: center, middle
+
+# CSS Modules - CSS in your JS (really)
+
+Popularized by the React.js community
+
+Styles applied to specific JS components
+
+Better than guessing at specific classnames: portable when the module is shared, always attached to the component
+
+---
+
+class: middle
+
+# CSS Modules: Example - the CSS
+
+```css
+
+.accordion {
+  ...
+}
+
+.icon {
+  ...
+}
+
+.header {
+  ...
+}
+
+.content {
+  display: none;
+}
+
+.visible {
+  display: block;
+}
+
+```
+
+---
+
+class: middle
+
+# CSS Modules: Example - the JS
+
+```javascript
+import React, { Component } from 'react';  
+import icon from './icon.svg';  
+import styles from './Accordion.css';
+
+class Accordion extends Component {  
+  render() {
+    return (
+      <div className={ styles.accordion }>
+        <div className={ styles.header }>
+          <h2>Click to open</h2>
+          <img src={icon} className={ styles.icon } alt="close button" />
+        </div>
+        <p className={ styles.content }>
+          This content is hidden until the header is clicked.
+        </p>
+      </div>
+    );
+  }
+}
+
+export default Accordion;  
+```
+
+---
+
+class: center, middle
+
+# In the End
+
+It's all CSS
+
+---
+Resources
+Sass: http://sass-lang.com  
+Koala: http://koala-app.com/  
+Sass Function Reference: http://sass-lang.com/documentation/Sass/Script/Functions.html  
+
+PostCSS: https://github.com/postcss/postcss
+AutoReset: https://github.com/maximkoretskiy/postcss-autoreset
+Autoprefixer: https://github.com/postcss/autoprefixer
+CSSNext: http://cssnext.io/
+
+    </textarea>
+    <script src="https://remarkjs.com/downloads/remark-latest.min.js">
+    </script>
+    <script>
+      var slideshow = remark.create();
+    </script>
+  </body>
+</html>
